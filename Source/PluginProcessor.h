@@ -1,12 +1,13 @@
 #pragma once
 
+#include <random>
 #include <juce_audio_processors/juce_audio_processors.h>
 
-class AudioPluginAudioProcessor : public juce::AudioProcessor
+class LoadMonsterProcessor : public juce::AudioProcessor
 {
 public:
-    AudioPluginAudioProcessor();
-    ~AudioPluginAudioProcessor() override;
+    LoadMonsterProcessor();
+    ~LoadMonsterProcessor() override;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -34,6 +35,27 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    void startProfile();
+    float cpuLoadProportion;
+    juce::AudioParameterInt* multipliesPerSample;
+    size_t lastMultiplies = 0;
+    std::atomic<bool> automate = false;
+    std::vector<float> results;
+    size_t maxBlockSize;
+
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LoadMonsterProcessor)
+#if DEBUG
+    static const size_t maxNumberOfMultiplies = 1000;
+    static const size_t increment = 50;
+#else
+    static const size_t maxNumberOfMultiplies = 100000;
+    static const size_t increment = 200;
+#endif
+    static const size_t buffersPerIncrement = 10;
+    size_t currentBuffer = 0;
+    juce::AudioProcessLoadMeasurer measurer;
+    std::minstd_rand gen { std::random_device{}() };
+    std::uniform_real_distribution<float> dist { 0, 1 };
+
 };

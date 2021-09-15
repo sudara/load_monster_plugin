@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 # Change this to your project name
-set(PROJECT_NAME "Pamplejuce")
+set(PROJECT_NAME "LoadMonster")
 
 # Set the plugin formats you'll be building here. Valid formats: AAX Unity VST AU AUv3 Standalone
 set(FORMATS AU VST3 AUv3)
@@ -43,21 +43,23 @@ option(JUCE_ENABLE_MODULE_SOURCE_GROUPS "Show all module sources in IDE projects
 # On Github Actions, it's managed by actions/checkout
 add_subdirectory(JUCE)
 
+juce_add_module("modules/melatonin_inspector")
+
 # Check the readme at `docs/CMake API.md` in the JUCE repo for full config
 juce_add_plugin("${PROJECT_NAME}"
     # VERSION ...                               # Set this if the plugin version is different to the project version
     # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
     # ICON_SMALL ...
-    COMPANY_NAME Pamplejuce
-    BUNDLE_ID com.pamplejuce.pamplejuce
+    COMPANY_NAME Melatonin
+    BUNDLE_ID com.melatonin.melatonin
     # IS_SYNTH TRUE/FALSE                       # Is this a synth or an effect?
     # NEEDS_MIDI_INPUT TRUE/FALSE               # Does the plugin need midi input?
     # NEEDS_MIDI_OUTPUT TRUE/FALSE              # Does the plugin need midi output?
     # IS_MIDI_EFFECT TRUE/FALSE                 # Is this plugin a MIDI effect?
     # EDITOR_WANTS_KEYBOARD_FOCUS TRUE/FALSE    # Does the editor need keyboard focus?
     COPY_PLUGIN_AFTER_BUILD TRUE # On MacOS, plugin will be copied to /Users/you/Library/Audio/Plug-Ins/
-    PLUGIN_MANUFACTURER_CODE Pamp 
-    PLUGIN_CODE P001                            # A unique four-character plugin id with at least one upper-case character
+    PLUGIN_MANUFACTURER_CODE Mela
+    PLUGIN_CODE LM01                            # A unique four-character plugin id with at least one upper-case character
     FORMATS "${FORMATS}"
     PRODUCT_NAME "${PROJECT_NAME}")        # The name of the final executable, which can differ from the target name
 
@@ -79,7 +81,7 @@ set_target_properties("${PROJECT_NAME}" PROPERTIES FOLDER "")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "" FILES ${SourceFiles})
 
 # Setup our binary data as a target
-juce_add_binary_data(Assets SOURCES pamplejuce.png)
+juce_add_binary_data(Assets SOURCES Assets/logo.png)
 
 # This cleans up the folder organization, especially on Xcode.
 # It tucks the Plugin varieties into a "Targets" folder and generate an Xcode Scheme manually
@@ -105,13 +107,14 @@ set_target_properties(Assets PROPERTIES FOLDER "Targets")
 
 # We'll need to link to these from our plugin as well as our tests
 set(JUCE_DEPENDENCIES
-    juce::juce_audio_utils)
+    juce::juce_audio_utils melatonin_inspector)
 
 target_compile_definitions("${PROJECT_NAME}"
     PUBLIC
     # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
     JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
     JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
+    CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     JUCE_VST3_CAN_REPLACE_VST2=0)
     
 target_link_libraries("${PROJECT_NAME}"
