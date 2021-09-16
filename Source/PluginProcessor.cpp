@@ -130,6 +130,8 @@ void LoadMonsterProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
+    measurer.reset(getSampleRate(), buffer.getNumSamples());
+
     auto multiplies = (size_t) multipliesPerSample->get();
 
     {
