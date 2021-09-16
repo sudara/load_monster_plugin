@@ -82,6 +82,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/Source PREFIX "" FILES ${SourceFil
 
 # Setup our binary data as a target
 juce_add_binary_data(Assets SOURCES Assets/logo.png)
+set_target_properties(Assets PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 # This cleans up the folder organization, especially on Xcode.
 # It tucks the Plugin varieties into a "Targets" folder and generate an Xcode Scheme manually
