@@ -2,28 +2,51 @@
 
 #include "Colors.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "juce_gui_extra/juce_gui_extra.h"
 
+template <class T>
 class GraphComponent : public juce::Component
 {
 public:
-    GraphComponent (std::vector<float>& r, size_t& m) : results (r), lastMultiplies (m)
+    struct Data
     {
-        xLabel.setText ("multiplies", juce::dontSendNotification);
-        yLabel.setText ("% of callback time spent in CPU", juce::dontSendNotification);
+        juce::String xLabel;
+        juce::String yLabel;
+        size_t maxXValue;
+        T maxYValue;
+        std::vector<T>& results;
+        juce::Colour valueColor;
+    };
 
-        addAndMakeVisible (yValue);
-        yValue.setColour (yValue.textColourId, Colors::graphValue);
-        yValue.setJustificationType (juce::Justification::right);
+    GraphComponent (Data d) : data (d)
+    {
+        addAndMakeVisible (xLabel);
+        xLabel.setColour (xLabel.textColourId, Colors::buttonText);
+        xLabel.setJustificationType (juce::Justification::centred);
+        xLabel.setText (data.xLabel, juce::dontSendNotification);
+
+        addAndMakeVisible (xValue);
+        xValue.setColour (xValue.textColourId, data.valueColor);
+        xValue.setJustificationType (juce::Justification::right);
+
+        addAndMakeVisible (originValue);
+        originValue.setColour (originValue.textColourId, data.valueColor);
+        originValue.setJustificationType (juce::Justification::left);
+        originValue.setText ("0", juce::dontSendNotification);
 
         addAndMakeVisible (yLabel);
         yLabel.setColour (yLabel.textColourId, Colors::buttonText);
         yLabel.setJustificationType (juce::Justification::centred);
-        yLabel.setText ("multiplies", juce::dontSendNotification);
+        yLabel.setText (data.yLabel, juce::dontSendNotification);
 
-        addAndMakeVisible (originValue);
-        originValue.setColour (originValue.textColourId, Colors::graphValue);
-        originValue.setJustificationType (juce::Justification::left);
-        originValue.setText ("0", juce::dontSendNotification);
+        addAndMakeVisible (yValue);
+        yValue.setColour (yValue.textColourId, data.valueColor);
+        yValue.setJustificationType (juce::Justification::left);
+    }
+
+    void setMaxXValue (size_t newValue)
+    {
+        xValue.setText (juce::String (newValue), juce::dontSendNotification);
     }
 
     void paint (juce::Graphics& g) override
@@ -31,19 +54,21 @@ public:
         g.setColour (Colors::graphBackground);
         g.fillRoundedRectangle (graphBounds.toFloat(), 4.0f);
 
-        if (!results.empty())
+        if (!data.results.empty())
         {
-            float widthOfOneResult = (float) getWidth() / (float) results.size();
-            g.setColour (Colors::graphValue);
-            for (size_t i = 0; i < results.size(); ++i)
+            float widthOfOneResult = (float) graphBounds.getWidth() / (float) data.results.size();
+            g.setColour (data.valueColor);
+            for (size_t i = 0; i < data.results.size(); ++i)
             {
-                g.fillRect ((float) i * widthOfOneResult, (float) graphBounds.getHeight() * (1.0f - results[i]), widthOfOneResult, (float) graphBounds.getHeight() * results[i]);
+                auto xPosition = (float) graphBounds.getX() + (float) i * widthOfOneResult;
+                auto yPosition = (float) graphBounds.getHeight() * (data.maxYValue - data.results[i]);
+                auto height = (float) graphBounds.getHeight() - yPosition;
+                g.fillRect (xPosition, yPosition, widthOfOneResult, height);
             }
-            yValue.setText (juce::String (lastMultiplies), juce::dontSendNotification);
         }
         else
         {
-            yValue.setText ("", juce::dontSendNotification);
+            xValue.setText ("", juce::dontSendNotification);
         }
     }
 
@@ -52,21 +77,27 @@ public:
         auto area = getLocalBounds();
 
         auto footer = area.removeFromBottom (20);
-        yValue.setBounds (footer.removeFromRight (50));
+        xValue.setBounds (footer.removeFromRight (50));
         originValue.setBounds (footer.removeFromLeft (50));
-        yLabel.setBounds (footer);
+        xLabel.setBounds (footer);
+
+        auto yAxis = area.removeFromLeft (20);
+        yValue.setBounds (yAxis.removeFromTop (30));
+
+        yLabel.setBounds (0, area.getHeight() - 20, 50, 20);
+        yLabel.setTransform (juce::AffineTransform::rotation (-juce::MathConstants<float>::halfPi, 0, (float) area.getHeight() - 20));
 
         graphBounds = area;
     }
 
 private:
-    std::vector<float>& results;
-    size_t& lastMultiplies;
+    Data data;
 
     juce::Rectangle<int> graphBounds;
 
     juce::Label xLabel;
     juce::Label yLabel;
     juce::Label originValue;
+    juce::Label xValue;
     juce::Label yValue;
 };

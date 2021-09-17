@@ -18,4 +18,6 @@ namespace Colors
 
     const Colour graphBackground = juce::Colour::fromRGB (38, 50, 56);
     const Colour graphValue = juce::Colour::fromRGB (177, 204, 52);
+
+    const Colour blockGraphValue = juce::Colour::fromRGB (66, 162, 200);
 }

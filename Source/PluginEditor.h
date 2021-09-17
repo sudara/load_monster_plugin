@@ -26,20 +26,24 @@ public:
 
 private:
     LoadMonsterProcessor& processorRef;
-
+    MelatoninInspector inspector { *this, false };
     BigButton bigButtonLNF;
 
     MeterComponent meter { processorRef.cpuLoadProportion };
-    GraphComponent graph { processorRef.results, processorRef.lastMultiplies };
+    GraphComponent<float> cpuGraph { { "multiplies per sample", "% CPU", processorRef.lastMultiplies, 1.0f, processorRef.results, Colors::graphValue } };
+    GraphComponent<size_t> blockSizeGraph { { "block sizes", "", processorRef.blockSizes.size(), processorRef.maxBlockSize, processorRef.blockSizes, Colors::blockGraphValue } };
 
-    MelatoninInspector inspector { *this, false };
+    juce::Label multipliesPerBlockLabel;
+    juce::Slider multipliesPerBlock;
+    juce::SliderParameterAttachment multipliesPerBlockAttachment { *processorRef.multipliesPerBlock, multipliesPerBlock };
 
-    juce::Slider numberOfMultiplies;
-    juce::SliderParameterAttachment multipliesAttachment { *processorRef.multipliesPerSample, numberOfMultiplies };
+    juce::Label multipliesPerSampleLabel;
+    juce::Slider multipliesPerSample;
+    juce::SliderParameterAttachment multipliesPerSampleAttachment { *processorRef.multipliesPerSample, multipliesPerSample };
+
     juce::Image logo;
     juce::Label title;
     juce::TextButton automateButton;
-    juce::Label numberOfMultipliesLabel;
     juce::Label meterLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LoadMonsterEditor)

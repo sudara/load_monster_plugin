@@ -12,11 +12,16 @@ LoadMonsterProcessor::LoadMonsterProcessor()
 #endif
     )
 {
-    addParameter (multipliesPerSample = new juce::AudioParameterInt ("multipliesPerBlock",
-                      "Multiplies Per Block",
+    addParameter (multipliesPerSample = new juce::AudioParameterInt ("multipliesPerSample",
+                      "Multiplies Per Sample",
                       0,
                       maxNumberOfMultiplies,
                       50));
+    addParameter (multipliesPerBlock = new juce::AudioParameterInt ("multipliesPerBlock",
+                      "Multiplies Per Block",
+                      0,
+                      maxNumberOfMultiplies * 10,
+                      100));
 }
 
 LoadMonsterProcessor::~LoadMonsterProcessor()
@@ -130,16 +135,19 @@ void LoadMonsterProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
-    measurer.reset(getSampleRate(), buffer.getNumSamples());
-
+    auto numSamples = (size_t) buffer.getNumSamples();
     auto multiplies = (size_t) multipliesPerSample->get();
+
+    measurer.reset (getSampleRate(), numSamples);
 
     {
         // Only measure time inside this scope
         juce::AudioProcessLoadMeasurer::ScopedTimer s (measurer);
 
         volatile float sum = 0.0f;
-        for (size_t i = 0; i < multiplies * (size_t) buffer.getNumSamples(); ++i)
+        volatile auto totalMultiplies = multiplies * numSamples + (size_t) multipliesPerBlock->get();
+
+        for (size_t i = 0; i < totalMultiplies; ++i)
         {
             sum = sum * dist (gen);
         }
@@ -153,6 +161,7 @@ void LoadMonsterProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         currentBuffer++;
         lastMultiplies = multiplies;
         results.push_back (cpuLoadProportion);
+        blockSizes.push_back (numSamples);
 
         if (((size_t) multiplies + increment > maxNumberOfMultiplies) || (cpuLoadProportion >= 1.0))
         {
@@ -173,8 +182,11 @@ void LoadMonsterProcessor::startProfile()
     multipliesPerSample->setValueNotifyingHost (0);
     lastMultiplies = 0;
     currentBuffer = 0;
+    auto numResults = maxNumberOfMultiplies / increment * buffersPerIncrement;
     results.clear();
-    results.reserve (maxNumberOfMultiplies / increment * buffersPerIncrement);
+    results.reserve (numResults);
+    blockSizes.clear();
+    blockSizes.reserve (numResults);
 }
 //==============================================================================
 bool LoadMonsterProcessor::hasEditor() const

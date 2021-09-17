@@ -18,16 +18,21 @@ LoadMonsterEditor::LoadMonsterEditor (LoadMonsterProcessor& p)
     automateButton.setColour (automateButton.textColourOnId, Colors::buttonText);
     automateButton.onClick = [this]() { startProfile(); };
 
-    addAndMakeVisible (numberOfMultiplies);
-    addAndMakeVisible (numberOfMultipliesLabel);
-    numberOfMultipliesLabel.setText ("Multiplies per sample", juce::dontSendNotification);
+    addAndMakeVisible (multipliesPerSampleLabel);
+    multipliesPerSampleLabel.setText ("Multiplies Per Sample", juce::dontSendNotification);
+    addAndMakeVisible (multipliesPerSample);
+
+    addAndMakeVisible (multipliesPerBlockLabel);
+    multipliesPerBlockLabel.setText ("Multiplies Per Block", juce::dontSendNotification);
+    addAndMakeVisible (multipliesPerBlock);
 
     addAndMakeVisible (meterLabel);
-    meterLabel.setText ("% CPU LOAD", juce::dontSendNotification);
+    meterLabel.setText ("% CPU Load", juce::dontSendNotification);
     addAndMakeVisible (meter);
-    addAndMakeVisible (graph);
+    addAndMakeVisible (cpuGraph);
+    addAndMakeVisible (blockSizeGraph);
 
-    setSize (450, 500);
+    setSize (500, 550);
 }
 
 //==============================================================================
@@ -60,16 +65,24 @@ void LoadMonsterEditor::resized()
     area.removeFromTop (logoHeight - 44);
     automateButton.setBounds (area.removeFromTop (35).reduced (100, 0));
 
-    area.removeFromTop (30);
-    numberOfMultipliesLabel.setBounds (area.removeFromTop (20));
-    numberOfMultiplies.setBounds (area.removeFromTop (30));
+    area.removeFromTop (20);
+    auto sliders = area.removeFromTop (50);
+    auto blockSliderArea = sliders.removeFromLeft (sliders.getWidth() / 2);
+    multipliesPerBlockLabel.setBounds (blockSliderArea.removeFromTop (20));
+    multipliesPerBlock.setBounds (blockSliderArea.removeFromTop (30));
+
+    multipliesPerSampleLabel.setBounds (sliders.removeFromTop (20));
+    multipliesPerSample.setBounds (sliders.removeFromTop (30));
+
+    meter.setBounds (area.removeFromBottom (20));
+    meterLabel.setBounds (area.removeFromBottom (20));
+    area.removeFromBottom (20);
 
     area.removeFromTop (20);
-    meterLabel.setBounds (area.removeFromTop (30));
-    meter.setBounds (area.removeFromTop (30));
+    cpuGraph.setBounds (area.removeFromTop (100));
 
     area.removeFromTop (20);
-    graph.setBounds (area);
+    blockSizeGraph.setBounds (area);
 }
 
 void LoadMonsterEditor::startProfile()
@@ -80,7 +93,10 @@ void LoadMonsterEditor::startProfile()
 
 void LoadMonsterEditor::timerCallback()
 {
-    graph.repaint();
+    cpuGraph.setMaxXValue (processorRef.lastMultiplies);
+    cpuGraph.repaint();
+
+    blockSizeGraph.repaint();
     if (processorRef.automate == false)
     {
         automateButton.setEnabled (true);
