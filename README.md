@@ -1,7 +1,7 @@
 # LOAD MONSTER
 [![](https://github.com/sudara/load_monster_plugin/workflows/CMake/badge.svg)](https://github.com/sudara/load_monster_plugin/actions)
 
-![](https://user-images.githubusercontent.com/472/133512219-50bf5f4a-2659-4c5a-9ddb-cc6754284f8b.mp4)
+https://user-images.githubusercontent.com/472/133512219-50bf5f4a-2659-4c5a-9ddb-cc6754284f8b.mp4
 
 ## What?
 
